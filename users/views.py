@@ -1,10 +1,14 @@
-from rest_framework.generics import RetrieveUpdateAPIView, CreateAPIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
+from rest_framework.filters import OrderingFilter
+from rest_framework.generics import (CreateAPIView, ListAPIView,
+                                     RetrieveUpdateAPIView)
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from .models import User
-from .serializers import UserSerializer
+from .filters import PaymentFilter
+from .models import Payment, User
+from .serializers import PaymentSerializer, UserSerializer
 
 
 class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):
@@ -35,7 +39,19 @@ class RegisterAPIView(CreateAPIView):
                 "email": user.email,
                 "phone": user.phone,
                 "city": user.city,
-                "message": "Пользователь успешно зарегистрирован"
+                "message": "Пользователь успешно зарегистрирован",
             },
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )
+
+
+class PaymentListView(ListAPIView):
+    """Список платежей с фильтрацией и сортировкой"""
+
+    queryset = Payment.objects.select_related("user", "course", "lesson")
+    serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = PaymentFilter
+    ordering_fields = ["payment_date", "amount"]
+    ordering = ["-payment_date"]

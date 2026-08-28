@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User
+
+from .models import Payment, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,3 +20,31 @@ class UserSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
         return user
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    """Сериализатор для платежей"""
+
+    user_email = serializers.CharField(source="user.email", read_only=True)
+    course_title = serializers.CharField(
+        source="course.title", read_only=True, allow_null=True
+    )
+    lesson_title = serializers.CharField(
+        source="lesson.title", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = Payment
+        fields = [
+            "id",
+            "user",
+            "user_email",
+            "payment_date",
+            "course",
+            "course_title",
+            "lesson",
+            "lesson_title",
+            "amount",
+            "payment_method",
+        ]
+        read_only_fields = ["id", "user", "user_email", "payment_date"]

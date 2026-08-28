@@ -3,8 +3,8 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
-from learnix.models import Course, Lesson
 
+from learnix.models import Course, Lesson
 
 
 class UserManager(BaseUserManager):
@@ -20,9 +20,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(
-        self, email: str, password: str | None = None, **extra_fields
-    ):
+    def create_superuser(self, email: str, password: str | None = None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
@@ -73,19 +71,16 @@ class Payment(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         verbose_name="Пользователь",
-        related_name="payments"
+        related_name="payments",
     )
-    payment_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата оплаты"
-    )
+    payment_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата оплаты")
     course = models.ForeignKey(
         Course,
         on_delete=models.CASCADE,
         verbose_name="Оплаченный курс",
         related_name="payments",
         blank=True,
-        null=True
+        null=True,
     )
     lesson = models.ForeignKey(
         Lesson,
@@ -93,17 +88,13 @@ class Payment(models.Model):
         verbose_name="Оплаченный урок",
         related_name="payments",
         blank=True,
-        null=True
+        null=True,
     )
     amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name="Сумма оплаты"
+        max_digits=10, decimal_places=2, verbose_name="Сумма оплаты"
     )
     payment_method = models.CharField(
-        max_length=20,
-        choices=PAYMENT_METHOD_CHOICES,
-        verbose_name="Способ оплаты"
+        max_length=20, choices=PAYMENT_METHOD_CHOICES, verbose_name="Способ оплаты"
     )
 
     class Meta:
