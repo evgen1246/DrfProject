@@ -63,4 +63,6 @@ class PaymentListView(ListAPIView):
 
     def get_queryset(self):
         """Возвращает только платежи текущего пользователя"""
-        return Payment.objects.filter(user=self.request.user).select_related("user", "course", "lesson")
+        return Payment.objects.filter(user=self.request.user).select_related(
+            "user", "course", "lesson"
+        )

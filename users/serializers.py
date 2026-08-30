@@ -49,6 +49,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "user", "user_email", "payment_date"]
 
+
 class UserProfileSerializer(serializers.ModelSerializer):
     """Сериализатор для профиля пользователя с историей платежей"""
 
