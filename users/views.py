@@ -11,11 +11,16 @@ from .models import Payment, User
 from .serializers import PaymentSerializer, UserSerializer
 
 
+class UserRegistrationSerializer:
+    pass
+
+
 class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     """Просмотр и обновление профиля текущего пользователя"""
 
-    serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated,)
+    queryset = User.objects.all()
+    serializer_class = UserRegistrationSerializer
+    permission_classes = (AllowAny,)
 
     def get_object(self) -> User:
         return self.request.user
@@ -55,3 +60,7 @@ class PaymentListView(ListAPIView):
     filterset_class = PaymentFilter
     ordering_fields = ["payment_date", "amount"]
     ordering = ["-payment_date"]
+
+    def get_queryset(self):
+        """Возвращает только платежи текущего пользователя"""
+        return Payment.objects.filter(user=self.request.user).select_related("user", "course", "lesson")
