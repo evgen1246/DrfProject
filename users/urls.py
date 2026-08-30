@@ -1,9 +1,10 @@
 from django.urls import path
 
+from .apps import UsersConfig
 from .views import (PaymentListView, ProfileRetrieveUpdateAPIView,
                     RegisterAPIView)
 
-app_name = "users"
+app_name = UsersConfig.name
 
 urlpatterns = [
     path("profile/", ProfileRetrieveUpdateAPIView.as_view(), name="profile"),

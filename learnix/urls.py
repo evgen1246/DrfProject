@@ -1,10 +1,11 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from .apps import LearnixConfig
 from .views import (CourseViewSet, LessonListCreateView,
                     LessonRetrieveUpdateDeleteView)
 
-app_name = "learnix"
+app_name = LearnixConfig.name
 
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet, basename="course")
