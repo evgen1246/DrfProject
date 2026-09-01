@@ -25,14 +25,25 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "create":
             self.permission_classes = [IsAuthenticated]
-        elif self.action in ["update", "partial_update", "destroy"]:
+        elif self.action in ["update", "partial_update"]:
             self.permission_classes = [IsAuthenticated, IsOwnerOrModerator]
+        elif self.action == "destroy":
+            self.permission_classes = [IsAuthenticated]
         else:
             self.permission_classes = [IsAuthenticated]
         return [permission() for permission in self.permission_classes]
 
     def perform_create(self, serializer):
+        if self.request.user.groups.filter(name="Модераторы").exists():
+            raise PermissionDenied("Модераторы не могут создавать курсы")
         serializer.save(owner=self.request.user)
+
+    def perform_destroy(self, instance):
+        if self.request.user.groups.filter(name="Модераторы").exists():
+            raise PermissionDenied("Модераторы не могут удалять курсы")
+        if instance.owner != self.request.user:
+            raise PermissionDenied("Вы не можете удалить этот курс")
+        instance.delete()
 
 
 class LessonListCreateView(generics.ListCreateAPIView):
@@ -57,10 +68,12 @@ class LessonListCreateView(generics.ListCreateAPIView):
         return [permission() for permission in self.permission_classes]
 
     def perform_create(self, serializer):
+        if self.request.user.groups.filter(name="Модераторы").exists():
+            raise PermissionDenied("Модераторы не могут создавать уроки")
+
         course = serializer.validated_data.get("course")
         if course and course.owner != self.request.user:
-            if not self.request.user.groups.filter(name="Модераторы").exists():
-                raise PermissionDenied("Вы не можете создавать уроки в чужих курсах")
+            raise PermissionDenied("Вы не можете создавать уроки в чужих курсах")
         serializer.save(owner=self.request.user)
 
 
@@ -72,8 +85,10 @@ class LessonRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        if self.request.method in ["PUT", "PATCH", "DELETE"]:
+        if self.request.method in ["PUT", "PATCH"]:
             self.permission_classes = [IsAuthenticated, IsOwnerOrModerator]
+        elif self.request.method == "DELETE":
+            self.permission_classes = [IsAuthenticated]
         else:
             self.permission_classes = [IsAuthenticated]
         return [permission() for permission in self.permission_classes]
@@ -86,4 +101,8 @@ class LessonRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         serializer.save()
 
     def perform_destroy(self, instance):
+        if self.request.user.groups.filter(name="Модераторы").exists():
+            raise PermissionDenied("Модераторы не могут удалять уроки")
+        if instance.owner != self.request.user:
+            raise PermissionDenied("Вы не можете удалить этот урок")
         instance.delete()
