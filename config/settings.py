@@ -1,6 +1,8 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
+import stripe
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -22,16 +24,21 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt",
     "users",
     "learnix",
     "django_filters",
+    "drf_yasg",
+    "payments",
 ]
 
 REST_FRAMEWORK = {
-    "DEFAULT_FILTER_BACKENDS": [
-        "django_filters.rest_framework.DjangoFilterBackend",
-        "rest_framework.filters.OrderingFilter",
-        "rest_framework.filters.SearchFilter",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
 }
 
@@ -113,3 +120,14 @@ AUTH_USER_MODEL = "users.User"
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
+
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+stripe.api_key = STRIPE_SECRET_KEY
