@@ -6,11 +6,12 @@ from .validators import validate_youtube_only
 
 class LessonSerializer(serializers.ModelSerializer):
     """Сериализатор для уроков"""
+
     video_url = serializers.URLField(
         validators=[validate_youtube_only],
         required=False,
         allow_blank=True,
-        allow_null=True
+        allow_null=True,
     )
 
     class Meta:
@@ -50,6 +51,7 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_lessons_count(self, obj):
         """Возвращает количество уроков в курсе"""
         return obj.lessons.count()
+
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор для подписки"""

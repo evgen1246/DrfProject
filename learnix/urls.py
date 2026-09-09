@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .apps import LearnixConfig
 from .views import (CourseViewSet, LessonListCreateView,
-                    LessonRetrieveUpdateDeleteView)
+                    LessonRetrieveUpdateDeleteView, SubscriptionView)
 
 app_name = LearnixConfig.name
 
@@ -19,4 +19,5 @@ urlpatterns = [
         LessonRetrieveUpdateDeleteView.as_view(),
         name="lesson_detail",
     ),
+    path("subscriptions/", SubscriptionView.as_view(), name="subscriptions"),
 ]
