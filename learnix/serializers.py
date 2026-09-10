@@ -22,6 +22,7 @@ class LessonSerializer(serializers.ModelSerializer):
             "description",
             "preview",
             "video_url",
+            "course",
             "created_at",
             "updated_at",
         ]
