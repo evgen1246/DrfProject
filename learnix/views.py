@@ -4,8 +4,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from users.permissions import IsModerator, IsOwner, IsOwnerOrModerator
+from .paginators import CoursePagination, LessonPagination
+from users.permissions import IsOwnerOrModerator
 
 from .models import Course, Lesson, Subscription
 from .serializers import CourseSerializer, LessonSerializer
@@ -16,6 +16,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    pagination_class = CoursePagination
 
     def get_queryset(self):
         user = self.request.user
@@ -54,6 +55,8 @@ class LessonListCreateView(generics.ListCreateAPIView):
 
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
+    pagination_class = LessonPagination
+
 
     def get_queryset(self):
         user = self.request.user
@@ -151,6 +154,7 @@ class SubscriptionView(APIView):
         """Получение списка курсов, на которые подписан пользователь"""
         user = request.user
         subscriptions = Subscription.objects.filter(user=user).select_related("course")
+
 
         data = [
             {
