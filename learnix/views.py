@@ -57,7 +57,6 @@ class LessonListCreateView(generics.ListCreateAPIView):
     serializer_class = LessonSerializer
     pagination_class = LessonPagination
 
-
     def get_queryset(self):
         user = self.request.user
         # Модераторы видят все уроки
@@ -154,7 +153,6 @@ class SubscriptionView(APIView):
         """Получение списка курсов, на которые подписан пользователь"""
         user = request.user
         subscriptions = Subscription.objects.filter(user=user).select_related("course")
-
 
         data = [
             {
