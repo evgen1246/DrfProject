@@ -5,8 +5,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from learnix.models import Course, Lesson
-
-from .models import Payment
+from payments.models import Payment
 
 User = get_user_model()
 

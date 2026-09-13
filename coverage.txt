@@ -1,0 +1,19 @@
+Текущая кодовая страница: 1251
+Name                                                   Stmts   Miss  Cover
+--------------------------------------------------------------------------
+learnix\__init__.py                                        0      0   100%
+learnix\admin.py                                          15      0   100%
+learnix\apps.py                                            3      0   100%
+learnix\migrations\0001_initial.py                         6      0   100%
+learnix\migrations\0002_course_owner_lesson_owner.py       6      0   100%
+learnix\migrations\0003_subscription.py                    6      0   100%
+learnix\migrations\__init__.py                             0      0   100%
+learnix\models.py                                         41      3    93%
+learnix\paginators.py                                      9      0   100%
+learnix\serializers.py                                    29      5    83%
+learnix\tests.py                                         128      5    96%
+learnix\urls.py                                            8      0   100%
+learnix\validators.py                                      8      0   100%
+learnix\views.py                                         104     24    77%
+--------------------------------------------------------------------------
+TOTAL                                                    363     37    90%
