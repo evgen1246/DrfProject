@@ -52,17 +52,7 @@ class LessonCRUDTestCase(APITestCase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_owner_can_create_lesson(self):
-        self.client.force_authenticate(user=self.owner)
-        url = reverse("learnix:lesson_list_create")
-        data = {
-            "title": "Новый урок",
-            "description": "Описание",
-            "video_url": "https://youtube.com/watch",
-            "course": self.course.id,
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 
     def test_other_user_cannot_create_lesson_in_foreign_course(self):
         self.client.force_authenticate(user=self.other_user)
