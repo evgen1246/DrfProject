@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_yasg",
     "payments",
+    "django_celery_beat",
 ]
 
 REST_FRAMEWORK = {
@@ -131,3 +132,14 @@ SIMPLE_JWT = {
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
 stripe.api_key = STRIPE_SECRET_KEY
+
+REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_DB = os.getenv("REDIS_DB", "0")
+REDIS_CELERY_DB = os.getenv("REDIS_CELERY_DB", "1")
+REDIS_BEAT_DB = os.getenv("REDIS_BEAT_DB", "2")
+
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
+CELERY_TIMEZONE = "Europe/Moscow"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
