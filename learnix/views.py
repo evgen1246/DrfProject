@@ -9,7 +9,7 @@ from users.permissions import IsOwnerOrModerator
 
 from .models import Course, Lesson, Subscription
 from .serializers import CourseSerializer, LessonSerializer
-
+from .tasks import send_course_update_email
 
 class CourseViewSet(viewsets.ModelViewSet):
     """ViewSet для CRUD операций с курсами"""
@@ -48,6 +48,12 @@ class CourseViewSet(viewsets.ModelViewSet):
         if instance.owner != self.request.user:
             raise PermissionDenied("Вы не можете удалить этот курс")
         instance.delete()
+
+    def perform_update(self, serializer):
+        """При обновлении курса — отправляем письма подписчикам"""
+        course = serializer.save()
+        send_course_update_email.delay(course.id)
+        return course
 
 
 class LessonListCreateView(generics.ListCreateAPIView):
