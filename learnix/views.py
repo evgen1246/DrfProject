@@ -4,12 +4,14 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .paginators import CoursePagination, LessonPagination
+
 from users.permissions import IsOwnerOrModerator
 
 from .models import Course, Lesson, Subscription
+from .paginators import CoursePagination, LessonPagination
 from .serializers import CourseSerializer, LessonSerializer
 from .tasks import send_course_update_email
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     """ViewSet для CRUD операций с курсами"""
