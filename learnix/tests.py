@@ -1,8 +1,8 @@
-from django.urls import reverse
-from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
-from rest_framework.test import APITestCase
+from django.contrib.auth.models import Group
+from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from learnix.models import Course, Lesson, Subscription
 
@@ -51,8 +51,6 @@ class LessonCRUDTestCase(APITestCase):
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-
 
     def test_other_user_cannot_create_lesson_in_foreign_course(self):
         self.client.force_authenticate(user=self.other_user)

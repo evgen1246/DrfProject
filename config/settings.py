@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import stripe
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -30,6 +31,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_yasg",
     "payments",
+    "django_celery_beat",
 ]
 
 REST_FRAMEWORK = {
@@ -131,3 +133,32 @@ SIMPLE_JWT = {
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
 stripe.api_key = STRIPE_SECRET_KEY
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_DB = os.getenv("REDIS_DB", "0")
+REDIS_CELERY_DB = os.getenv("REDIS_CELERY_DB", "1")
+REDIS_BEAT_DB = os.getenv("REDIS_BEAT_DB", "2")
+
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
+CELERY_TIMEZONE = "Europe/Moscow"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+CELERY_BEAT_SCHEDULE = {
+    "block-inactive-users-every-day": {
+        "task": "users.tasks.block_inactive_users",
+        "schedule": crontab(hour=9, minute=35),
+    },
+}
+
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_HOST = "smtp.yandex.ru"
+EMAIL_PORT = 465
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True

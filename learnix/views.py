@@ -4,12 +4,15 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .paginators import CoursePagination, LessonPagination
+
 from users.permissions import IsOwnerOrModerator
 
 from .models import Course, Lesson, Subscription
+from .paginators import CoursePagination, LessonPagination
 from .serializers import CourseSerializer, LessonSerializer
-
+from .tasks import send_course_update_email
+from datetime import timedelta
+from django.utils import timezone
 
 class CourseViewSet(viewsets.ModelViewSet):
     """ViewSet для CRUD операций с курсами"""
@@ -48,6 +51,15 @@ class CourseViewSet(viewsets.ModelViewSet):
         if instance.owner != self.request.user:
             raise PermissionDenied("Вы не можете удалить этот курс")
         instance.delete()
+
+
+    def perform_update(self, serializer):
+        """Обновить курс и уведомить подписчиков не чаще раза в 4 часа."""
+        previous_updated_at = serializer.instance.updated_at
+        course = serializer.save()
+
+        if timezone.now() - previous_updated_at >= timedelta(hours=4):
+            send_course_update_email.delay(course.pk)
 
 
 class LessonListCreateView(generics.ListCreateAPIView):
