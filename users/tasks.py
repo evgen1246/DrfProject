@@ -8,23 +8,16 @@ User = get_user_model()
 
 
 @shared_task
+@shared_task
 def block_inactive_users():
-    """Блокирует пользователей, которые не заходили более месяца.Устанавливает is_active = False."""
-
+    """Заблокировать обычных пользователей, не заходивших более месяца."""
     one_month_ago = timezone.now() - timedelta(days=30)
 
-    inactive_users = User.objects.filter(
+    blocked_count = User.objects.filter(
         is_active=True,
         last_login__lt=one_month_ago,
         is_superuser=False,
         is_staff=False,
-    )
-
-    blocked_count = 0
-
-    for user in inactive_users:
-        user.is_active = False
-        user.save(update_fields=["is_active"])
-        blocked_count += 1
+    ).update(is_active=False)
 
     return f"Заблокировано пользователей: {blocked_count}"

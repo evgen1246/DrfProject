@@ -11,7 +11,8 @@ from .models import Course, Lesson, Subscription
 from .paginators import CoursePagination, LessonPagination
 from .serializers import CourseSerializer, LessonSerializer
 from .tasks import send_course_update_email
-
+from datetime import timedelta
+from django.utils import timezone
 
 class CourseViewSet(viewsets.ModelViewSet):
     """ViewSet для CRUD операций с курсами"""
@@ -51,11 +52,14 @@ class CourseViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Вы не можете удалить этот курс")
         instance.delete()
 
+
     def perform_update(self, serializer):
-        """При обновлении курса — отправляем письма подписчикам"""
+        """Обновить курс и уведомить подписчиков не чаще раза в 4 часа."""
+        previous_updated_at = serializer.instance.updated_at
         course = serializer.save()
-        send_course_update_email.delay(course.id)
-        return course
+
+        if timezone.now() - previous_updated_at >= timedelta(hours=4):
+            send_course_update_email.delay(course.pk)
 
 
 class LessonListCreateView(generics.ListCreateAPIView):
