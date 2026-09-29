@@ -147,12 +147,6 @@ CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
 CELERY_TIMEZONE = "Europe/Moscow"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
-CELERY_BEAT_SCHEDULE = {
-    "block-inactive-users-every-day": {
-        "task": "users.tasks.block_inactive_users",
-        "schedule": crontab(hour=9, minute=35),
-    },
-}
 
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
