@@ -122,3 +122,4 @@ volumes:
 networks:
   drfproject_network:
     driver: bridge
+
