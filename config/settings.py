@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -74,16 +75,24 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.getenv("POSTGRES_DB", os.getenv("NAME")),
-        "USER": os.getenv("POSTGRES_USER", os.getenv("USER")),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", os.getenv("PASSWORD")),
-        "HOST": os.getenv("POSTGRES_HOST", os.getenv("HOST")),
-        "PORT": os.getenv("POSTGRES_PORT", os.getenv("PORT", "5432")),
+if "test" in sys.argv:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "test_db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": os.getenv("POSTGRES_DB", os.getenv("NAME")),
+            "USER": os.getenv("POSTGRES_USER", os.getenv("USER")),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", os.getenv("PASSWORD")),
+            "HOST": os.getenv("POSTGRES_HOST", os.getenv("HOST")),
+            "PORT": os.getenv("POSTGRES_PORT", os.getenv("PORT", "5432")),
+        }
+    }
 
 
 AUTH_PASSWORD_VALIDATORS = [
