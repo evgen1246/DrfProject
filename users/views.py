@@ -1,9 +1,13 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import OrderingFilter
-from rest_framework.generics import (CreateAPIView, ListAPIView,
-                                     ListCreateAPIView, RetrieveUpdateAPIView,
-                                     RetrieveUpdateDestroyAPIView)
+from rest_framework.generics import (
+    CreateAPIView,
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,9 +17,13 @@ from payments.models import Payment
 
 from .filters import PaymentFilter
 from .models import User
-from .serializers import (LoginSerializer, PaymentSerializer,
-                          UserProfileSerializer, UserRegistrationSerializer,
-                          UserUpdateSerializer)
+from .serializers import (
+    LoginSerializer,
+    PaymentSerializer,
+    UserProfileSerializer,
+    UserRegistrationSerializer,
+    UserUpdateSerializer,
+)
 
 
 class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):

@@ -37,3 +37,17 @@ build-backend = "poetry.core.masonry.api"
 dev = [
     "coverage (>=7.16.0,<8.0.0)"
 ]
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+extend-exclude = '''
+/(
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip = ["migrations"]

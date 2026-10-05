@@ -2,8 +2,12 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .apps import LearnixConfig
-from .views import (CourseViewSet, LessonListCreateView,
-                    LessonRetrieveUpdateDeleteView, SubscriptionView)
+from .views import (
+    CourseViewSet,
+    LessonListCreateView,
+    LessonRetrieveUpdateDeleteView,
+    SubscriptionView,
+)
 
 app_name = LearnixConfig.name
 
