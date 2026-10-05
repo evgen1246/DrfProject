@@ -111,5 +111,59 @@ GET /api/payments/cancel/ — отмена
 
 ### Запуск:
 
-```bash
+
+
 docker-compose up --build
+
+## CI/CD
+
+Проект использует GitHub Actions для автоматизации:
+
+- **Тесты** запускаются при каждом push и pull request в `develop`/`main`
+- **Деплой на сервер** происходит автоматически после успешных тестов при push в `develop`
+
+Файл конфигурации: `.github/workflows/deploy.yml`
+
+### Как работает деплой
+1. GitHub Actions подключается к серверу по SSH (ключ в secrets)
+2. Выполняет `git pull`, `docker compose up -d --build`, `migrate`
+3. Через ~1 минуту изменения на проде
+
+
+### Production инфраструктура
+- Добавлен `Dockerfile.prod` с Gunicorn
+- Добавлен `docker-compose.prod.yml` (6 сервисов: web, db, redis, celery_worker, celery_beat, nginx)
+- Настроен `nginx/nginx.conf` — reverse proxy + отдача статики/медиа
+- Приложение работает на удалённом сервере Yandex Cloud (Ubuntu 24.04)
+
+### Безопасность
+- Все секреты вынесены в `.env` (не в Git)
+- `.env.sample` — полный шаблон для разработки
+- SSH-доступ через отдельный deploy-key
+- Firewall: открыты только 22, 80, 443
+- БД и Redis не доступны снаружи
+
+### CI/CD (GitHub Actions)
+- Workflow `.github/workflows/deploy.yml`
+- Этапы: lint → test → build → deploy
+- Тесты на SQLite (изолированно)
+- Деплой по SSH только при push в `develop` после успешных тестов
+- Секреты в GitHub Secrets: `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `SSH_PORT`, `DJANGO_SECRET_KEY`
+
+### Как запустить локально
+1. `git clone -b develop https://github.com/evgen1246/DrfProject.git`
+2. `cd DrfProject`
+3. `cp .env.sample .env` — заполнить значения
+4. `poetry install`
+5. `poetry run python manage.py migrate`
+6. `poetry run python manage.py runserver`
+
+### Как задеплоить на сервер
+Автоматически через GitHub Actions при push в `develop`.
+Вручную:
+```bash
+ssh -l evgen1246 158.160.205.146
+cd ~/drfproject
+git pull
+docker compose -f docker-compose.prod.yml up -d --build
+```
