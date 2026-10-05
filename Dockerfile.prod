@@ -19,8 +19,7 @@ RUN poetry config virtualenvs.create false \
 
 COPY . .
 
-RUN mkdir -p /app/staticfiles /app/media \
-    && python manage.py collectstatic --noinput
+RUN mkdir -p /app/staticfiles /app/media
 
 EXPOSE 8000
 
