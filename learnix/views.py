@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
@@ -11,8 +14,7 @@ from .models import Course, Lesson, Subscription
 from .paginators import CoursePagination, LessonPagination
 from .serializers import CourseSerializer, LessonSerializer
 from .tasks import send_course_update_email
-from datetime import timedelta
-from django.utils import timezone
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     """ViewSet для CRUD операций с курсами"""
@@ -51,7 +53,6 @@ class CourseViewSet(viewsets.ModelViewSet):
         if instance.owner != self.request.user:
             raise PermissionDenied("Вы не можете удалить этот курс")
         instance.delete()
-
 
     def perform_update(self, serializer):
         """Обновить курс и уведомить подписчиков не чаще раза в 4 часа."""
