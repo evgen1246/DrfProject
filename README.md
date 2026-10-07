@@ -162,7 +162,7 @@ docker-compose up --build
 Автоматически через GitHub Actions при push в `develop`.
 Вручную:
 ```bash
-ssh -l evgen1246 158.160.205.146
+ssh -l evgen1246 158.160.240.116
 cd ~/drfproject
 git pull
 docker compose -f docker-compose.prod.yml up -d --build
