@@ -1,169 +1,284 @@
 # DrfProject
 
-LMS с курсами, уроками и платежами через Stripe.
+LMS-платформа с курсами, уроками и платежами через Stripe.  
+Backend на Django REST Framework, развёрнут на удалённом сервере с Docker, Nginx и CI/CD через GitHub Actions.
+
+**Production:** http://158.160.240.116/admin/
+
+---
 
 ## Стек
 
 - Python 3.12
-- Django 5.2
-- Django REST Framework
+- Django 5.2, Django REST Framework
 - PostgreSQL 16
 - Redis 7
 - Celery + Celery Beat
 - JWT (SimpleJWT)
 - Stripe API
 - Docker + Docker Compose
+- Nginx (reverse proxy)
+- GitHub Actions (CI/CD)
+- Poetry (управление зависимостями)
 
-## Быстрый старт
+---
+
+## Возможности
+
+- Регистрация и аутентификация пользователей (JWT)
+- Управление курсами и уроками
+- Подписки на курсы
+- Оплата через Stripe
+- Асинхронные задачи (Celery): рассылки, блокировка неактивных пользователей
+- Периодические задачи (Celery Beat)
+- Swagger / ReDoc документация API
+- Админка Django
+
+---
+
+## Быстрый старт (локально через Docker)
 
 ### 1. Клонирование
 
 ```bash
-git clone https://github.com/ваш_username/DrfProject.git
+git clone https://github.com/evgen1246/DrfProject.git
 cd DrfProject
 ```
 
-### 2. Настройка .env
+### 2. Настройка окружения
+
 ```bash
 cp .env.sample .env
 ```
 
-## Заполните:
+Заполните `.env`:
 
-SECRET_KEY — секретный ключ
-
-STRIPE_SECRET_KEY — ключ Stripe
-
-STRIPE_PUBLISHABLE_KEY — публичный ключ Stripe
-
-EMAIL_HOST_USER, EMAIL_HOST_PASSWORD — для отправки писем.
-
+| Переменная | Описание |
+|---|---|
+| `SECRET_KEY` | секретный ключ Django |
+| `DEBUG` | `True` для разработки, `False` для прода |
+| `ALLOWED_HOSTS` | через запятую: `localhost,127.0.0.1` |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | доступы к БД |
+| `POSTGRES_HOST` | `localhost` локально, `db` в Docker |
+| `POSTGRES_PORT` | `5432` |
+| `REDIS_HOST` | `localhost` локально, `redis` в Docker |
+| `REDIS_PORT` | `6379` |
+| `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY` | ключи Stripe |
+| `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | для отправки писем |
 
 ### 3. Запуск
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-## Сервисы:
-
+Приложение доступно:
 - API: http://localhost:8000
-
 - Swagger: http://localhost:8000/swagger/
-
 - ReDoc: http://localhost:8000/redoc/
-
 - Admin: http://localhost:8000/admin/
 
-
 ### 4. Создание суперпользователя
+
 ```bash
-docker-compose exec web python manage.py createsuperuser
+docker compose exec web python manage.py createsuperuser
 ```
 
 ### 5. Остановка
+
 ```bash
-docker-compose down
+docker compose down          # сохранив данные
+docker compose down -v       # с удалением volume'ов
 ```
 
-## С удалением данных:
-```bash
-docker-compose down -v
-```
+---
 
-## Локальная разработка
+## Локальная разработка (без Docker)
+
 ```bash
 poetry install
 poetry run python manage.py migrate
+poetry run python manage.py createsuperuser
 poetry run python manage.py runserver
 ```
 
-## Эндпоинты:
-#### - Пользователи:
+Требуется локально установленный PostgreSQL и Redis с настройками из `.env`.
 
-POST /api/users/register/ — регистрация
+---
 
-POST /api/users/login/ — вход
+## Production на сервере
 
-POST /api/users/token/ — JWT
+**URL:** http://158.160.240.116/admin/  
+**Сервер:** Yandex Cloud, Ubuntu 24.04
 
-GET /api/users/profile/ — профиль
+### Архитектура
 
-GET /api/users/payments/ — платежи
+6 сервисов в `docker-compose.prod.yml`:
 
-#### - Курсы и уроки:
-GET /api/courses/ — список курсов
-
-POST /api/courses/ — создать курс
-
-GET /api/lessons/ — список уроков
-
-POST /api/lessons/ — создать урок
-
-POST /api/subscriptions/ — подписка
-
-#### - Платежи
-POST /api/payments/create/ — создать оплату
-
-GET /api/payments/success/ — успешная оплата
-
-GET /api/payments/cancel/ — отмена
-
-### Запуск:
-
-
-
-docker-compose up --build
-
-## CI/CD
-
-Проект использует GitHub Actions для автоматизации:
-
-- **Тесты** запускаются при каждом push и pull request в `develop`/`main`
-- **Деплой на сервер** происходит автоматически после успешных тестов при push в `develop`
-
-Файл конфигурации: `.github/workflows/deploy.yml`
-
-### Как работает деплой
-1. GitHub Actions подключается к серверу по SSH (ключ в secrets)
-2. Выполняет `git pull`, `docker compose up -d --build`, `migrate`
-3. Через ~1 минуту изменения на проде
-
-
-### Production инфраструктура
-- Добавлен `Dockerfile.prod` с Gunicorn
-- Добавлен `docker-compose.prod.yml` (6 сервисов: web, db, redis, celery_worker, celery_beat, nginx)
-- Настроен `nginx/nginx.conf` — reverse proxy + отдача статики/медиа
-- Приложение работает на удалённом сервере Yandex Cloud (Ubuntu 24.04)
+| Сервис | Назначение |
+|---|---|
+| `web` | Django + Gunicorn (3 воркера) |
+| `db` | PostgreSQL 16 |
+| `redis` | Брокер сообщений для Celery |
+| `celery_worker` | Выполнение фоновых задач |
+| `celery_beat` | Периодические задачи |
+| `nginx` | Reverse proxy, отдача статики и медиа |
 
 ### Безопасность
-- Все секреты вынесены в `.env` (не в Git)
-- `.env.sample` — полный шаблон для разработки
-- SSH-доступ через отдельный deploy-key
-- Firewall: открыты только 22, 80, 443
-- БД и Redis не доступны снаружи
 
-### CI/CD (GitHub Actions)
-- Workflow `.github/workflows/deploy.yml`
-- Этапы: lint → test → build → deploy
-- Тесты на SQLite (изолированно)
-- Деплой по SSH только при push в `develop` после успешных тестов
-- Секреты в GitHub Secrets: `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `SSH_PORT`, `DJANGO_SECRET_KEY`
+- Все секреты в `.env` (не в Git, добавлен в `.gitignore`)
+- `.env.sample` — публичный шаблон без секретов
+- SSH deploy-key для GitHub Actions (отдельный от пользовательского)
+- Firewall (`ufw` + Security Group Yandex Cloud): открыты только 22, 80, 443
+- PostgreSQL и Redis доступны только внутри docker-сети
+- `DEBUG=False` на проде
 
-### Как запустить локально
-1. `git clone -b develop https://github.com/evgen1246/DrfProject.git`
-2. `cd DrfProject`
-3. `cp .env.sample .env` — заполнить значения
-4. `poetry install`
-5. `poetry run python manage.py migrate`
-6. `poetry run python manage.py runserver`
+### Ручной деплой
 
-### Как задеплоить на сервер
-Автоматически через GitHub Actions при push в `develop`.
-Вручную:
 ```bash
 ssh -l evgen1246 158.160.240.116
 cd ~/drfproject
-git pull
+git pull origin develop
+docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput
+```
+
+---
+
+## CI/CD
+
+Pipeline на GitHub Actions (`.github/workflows/deploy.yml`):
+
+```
+lint → test → build → deploy
+```
+
+| Этап | Что делает |
+|---|---|
+| **lint** | `black --check`, `isort --check-only` |
+| **test** | `python manage.py test` на SQLite в чистом окружении |
+| **build** | `docker build -f Dockerfile.prod` — проверка сборки образа |
+| **deploy** | SSH на сервер, `git pull`, `docker compose up -d --build`, `migrate` |
+
+### Триггеры
+
+- **push** в `develop` → все 4 этапа
+- **pull_request** в `develop`/`main` → только lint + test (деплой не запускается)
+- Деплой выполняется **только** при успешном прохождении lint, test и build
+
+### GitHub Secrets
+
+| Secret | Значение |
+|---|---|
+| `SSH_HOST` | IP сервера (`158.160.240.116`) |
+| `SSH_USER` | `evgen1246` |
+| `SSH_KEY` | приватный deploy-ключ (ed25519) |
+| `SSH_PORT` | `22` |
+| `DJANGO_SECRET_KEY` | секрет для тестов в CI |
+
+### Как работает деплой
+
+1. Developer пушит в `develop`
+2. GitHub Actions запускает pipeline (lint → test → build)
+3. Если все этапы зелёные — job `deploy` подключается к серверу по SSH
+4. На сервере выполняются: `git pull`, `docker compose up -d --build`, `migrate`
+5. Через ~1–2 минуты изменения на проде
+
+---
+
+## API эндпоинты
+
+### Пользователи (`/api/users/`)
+
+| Метод | URL | Описание |
+|---|---|---|
+| POST | `/register/` | регистрация |
+| POST | `/login/` | вход |
+| POST | `/token/` | получить JWT-токен |
+| GET | `/profile/` | профиль пользователя |
+| GET | `/payments/` | платежи пользователя |
+
+### Курсы и уроки (`/api/`)
+
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/courses/` | список курсов |
+| POST | `/courses/` | создать курс |
+| GET | `/lessons/` | список уроков |
+| POST | `/lessons/` | создать урок |
+| POST | `/subscriptions/` | подписка на курс |
+
+### Платежи (`/api/payments/`)
+
+| Метод | URL | Описание |
+|---|---|---|
+| POST | `/create/` | создать оплату через Stripe |
+| GET | `/success/` | успешная оплата |
+| GET | `/cancel/` | отмена оплаты |
+
+---
+
+## Структура проекта
+
+```
+DrfProject/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # CI/CD pipeline
+├── config/                      # настройки Django, celery, urls, wsgi
+│   ├── settings.py
+│   ├── celery.py
+│   ├── urls.py
+│   └── wsgi.py
+├── users/                       # пользователи, аутентификация, задачи
+│   ├── models.py
+│   ├── tasks.py
+│   └── ...
+├── learnix/                     # курсы, уроки, подписки
+├── payments/                    # интеграция со Stripe
+├── nginx/
+│   └── nginx.conf               # конфиг reverse proxy
+├── Dockerfile                   # dev-сборка
+├── Dockerfile.prod              # production-сборка (gunicorn)
+├── docker-compose.yml           # dev-конфиг
+├── docker-compose.prod.yml      # production-конфиг (6 сервисов)
+├── pyproject.toml               # зависимости (poetry)
+├── poetry.lock
+├── manage.py
+├── .env.sample                  # шаблон окружения
+└── README.md
+```
+
+---
+
+## Полезные команды
+
+### Логи сервисов
+
+```bash
+docker compose -f docker-compose.prod.yml logs -f web
+docker compose -f docker-compose.prod.yml logs -f celery_worker
+docker compose -f docker-compose.prod.yml logs -f nginx
+```
+
+### Перезапуск конкретного сервиса
+
+```bash
+docker compose -f docker-compose.prod.yml restart web
+```
+
+### Полная пересборка
+
+```bash
+docker compose -f docker-compose.prod.yml down
 docker compose -f docker-compose.prod.yml up -d --build
 ```
+
+### Проверка статуса
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+```
+
+---
+
