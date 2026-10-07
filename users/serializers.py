@@ -1,7 +1,9 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from .models import Payment, User
+from payments.models import Payment
+
+from .models import User
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

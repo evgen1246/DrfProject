@@ -1,10 +1,13 @@
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
+import stripe
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -12,7 +15,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = True if os.getenv("DEBUG") == "True" else False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 INSTALLED_APPS = [
@@ -27,6 +30,9 @@ INSTALLED_APPS = [
     "users",
     "learnix",
     "django_filters",
+    "drf_yasg",
+    "payments",
+    "django_celery_beat",
 ]
 
 REST_FRAMEWORK = {
@@ -69,16 +75,24 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.getenv("NAME"),
-        "USER": os.getenv("USER"),
-        "PASSWORD": os.getenv("PASSWORD"),
-        "HOST": os.getenv("HOST"),
-        "PORT": os.getenv("PORT"),
+if "test" in sys.argv:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "test_db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": os.getenv("POSTGRES_DB", os.getenv("NAME")),
+            "USER": os.getenv("POSTGRES_USER", os.getenv("USER")),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", os.getenv("PASSWORD")),
+            "HOST": os.getenv("POSTGRES_HOST", os.getenv("HOST")),
+            "PORT": os.getenv("POSTGRES_PORT", os.getenv("PORT", "5432")),
+        }
+    }
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -105,7 +119,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
@@ -124,3 +138,29 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+stripe.api_key = STRIPE_SECRET_KEY
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_DB = os.getenv("REDIS_DB", "0")
+REDIS_CELERY_DB = os.getenv("REDIS_CELERY_DB", "1")
+REDIS_BEAT_DB = os.getenv("REDIS_BEAT_DB", "2")
+
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
+CELERY_TIMEZONE = "Europe/Moscow"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_HOST = "smtp.yandex.ru"
+EMAIL_PORT = 465
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
