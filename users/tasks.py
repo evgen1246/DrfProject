@@ -6,7 +6,6 @@ from django.utils import timezone
 
 
 @shared_task
-@shared_task
 def block_inactive_users():
     """Заблокировать обычных пользователей, не заходивших более месяца."""
     User = get_user_model()
