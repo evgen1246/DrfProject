@@ -1,0 +1,85 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pip install "poetry>=2.0,<3.0"
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install --no-interaction --no-ansi --no-root
+      - name: Run Black (check)
+        run: poetry run black --check .
+      - name: Run isort (check)
+        run: poetry run isort --check-only .
+
+  test:
+    name: Run Django tests
+    runs-on: ubuntu-latest
+    needs: lint
+    env:
+      DEBUG: "False"
+      SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pip install "poetry>=2.0,<3.0"
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install --no-interaction --no-ansi --no-root --only main
+      - name: Run tests
+        run: python manage.py test --verbosity=2
+
+  build:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build image
+        run: docker build -f Dockerfile.prod -t drfproject:ci .
+      - name: Smoke test image
+        run: docker run --rm drfproject:ci python -c "print('Image OK')"
+
+  deploy:
+    name: Deploy to remote server
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            cd ~/drfproject
+            git fetch origin develop
+            git reset --hard origin/develop
+            docker compose -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.prod.yml exec -T web python manage.py migrate --noinput
+            docker image prune -f
+            echo "Deploy completed at $(date)"

@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from .models import Payment
+from payments.models import Payment
 
 
 class PaymentFilter(filters.FilterSet):

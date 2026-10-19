@@ -9,6 +9,8 @@ venv/
 *.egg-info/
 dist/
 build/
+test_db.sqlite3
+*.sqlite3
 
 # IDE
 .idea/
